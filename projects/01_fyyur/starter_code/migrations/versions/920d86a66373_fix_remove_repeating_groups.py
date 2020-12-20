@@ -1,8 +1,8 @@
-"""Remove reapeating groups in genres
+"""Fix: Remove repeating groups
 
-Revision ID: c37a97a22f9e
+Revision ID: 920d86a66373
 Revises: 69f06f675f75
-Create Date: 2020-12-19 08:05:02.471603
+Create Date: 2020-12-20 00:44:47.066645
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'c37a97a22f9e'
+revision = '920d86a66373'
 down_revision = '69f06f675f75'
 branch_labels = None
 depends_on = None
@@ -33,10 +33,10 @@ def upgrade():
     op.create_table('Show',
     sa.Column('artist_id', sa.Integer(), nullable=False),
     sa.Column('venue_id', sa.Integer(), nullable=False),
-    sa.Column('start_time', sa.String(length=250), nullable=True),
+    sa.Column('start_time', sa.String(length=250), nullable=False),
     sa.ForeignKeyConstraint(['artist_id'], ['Artist.id'], ),
     sa.ForeignKeyConstraint(['venue_id'], ['Venue.id'], ),
-    sa.PrimaryKeyConstraint('artist_id', 'venue_id')
+    sa.PrimaryKeyConstraint('artist_id', 'venue_id', 'start_time')
     )
     op.create_table('Venue_genres',
     sa.Column('venue_id', sa.Integer(), nullable=False),

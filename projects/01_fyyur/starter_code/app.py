@@ -44,12 +44,15 @@ artist_genres = db.Table('Artist_genres',
 
 class Show(db.Model):
     __tablename__ = 'Show'
-
     artist_id = db.Column(db.Integer, db.ForeignKey(
         'Artist.id'), primary_key=True)
     venue_id = db.Column(db.Integer, db.ForeignKey(
         'Venue.id'), primary_key=True)
-    start_time = db.Column(db.String(250))
+    start_time = db.Column(db.String(250), primary_key=True)
+    artist = db.relationship(
+        'Artist', backref=db.backref('show', lazy=True))
+    venue = db.relationship(
+        'Venue', backref=db.backref('show', lazy=True))
 
     def __repr__(self):
         return f'<Show: Artist={self.artist_id} venue={self.venue_id} start={self.start_time}>'
