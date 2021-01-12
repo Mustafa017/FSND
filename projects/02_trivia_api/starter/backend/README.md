@@ -34,8 +34,8 @@ This will install all of the required packages we selected within the `requireme
 
 With Postgres running, restore a database using the trivia.psql file provided. From the backend folder in terminal run:
 
-```bash
-psql trivia < trivia.psql
+```
+bash ../setup.sh
 ```
 
 ## Running the server
@@ -68,37 +68,14 @@ One note before you delve into your tasks: for each endpoint you are expected to
 8. Create a POST endpoint to get questions to play the quiz. This endpoint should take category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions.
 9. Create error handlers for all expected errors including 400, 404, 422 and 500.
 
-REVIEW_COMMENT
+## Documentation
 
-```
-This README is missing documentation of your endpoints. Below is an example for your endpoint to get all categories. Please use it as a reference for creating your documentation and resubmit your code.
-
-Endpoints
-GET '/categories'
-GET ...
-POST ...
-DELETE ...
-
-GET '/categories'
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
-- Request Arguments: None
-- Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs.
-{'1' : "Science",
-'2' : "Art",
-'3' : "Geography",
-'4' : "History",
-'5' : "Entertainment",
-'6' : "Sports"}
-
-```
+The `./documentation.md` directory contains the full documentation of the Trivia API.
 
 ## Testing
 
 To run the tests, run
 
 ```
-dropdb trivia_test
-createdb trivia_test
-psql trivia_test < trivia.psql
 python test_flaskr.py
 ```
