@@ -56,10 +56,12 @@ def create_app(test_config=None):
     number of total questions, current category, categories.
     '''
     def _paginate(request, selection):
+        # Get the requested page number or default to 1
         page = request.args.get('page', 1, type=int)
         start = (page - 1) * QUESTIONS_PER_PAGE
         end = start + QUESTIONS_PER_PAGE
         formatted_questions = [question.format() for question in selection]
+        # paginate questions in groups of 10
         paginated_questions = formatted_questions[start:end]
         return paginated_questions
 
@@ -71,7 +73,7 @@ def create_app(test_config=None):
             #     Question.category).add_columns(Category.id, Category.type).all()
             categories = Category.query.order_by(Category.id).all()
             category = [category.format() for category in categories]
-
+            # paginate the selected questions
             current_questions = _paginate(request, questions)
             if len(current_questions) == 0:
                 abort(400)
@@ -93,10 +95,14 @@ def create_app(test_config=None):
         try:
             selection = Question.query.filter(
                 Question.id == question_id).one_or_none()
+            # check if the id exists in the database
             if selection is None:
                 abort(404)
+            # Persist changes to the database
             selection.delete()
+            # Get an updated list of questions after the delete
             updated_questions = Question.query.order_by(Question.id).all()
+            # paginate the selected questions
             current_questions = _paginate(request, updated_questions)
             return jsonify({
                 "success": True,
@@ -121,6 +127,7 @@ def create_app(test_config=None):
     '''
     @app.route('/questions', methods=['POST'])
     def create_question():
+        # Get the request payload
         body = request.get_json()
         answer = body.get('answer', None)
         question = body.get('question', None)
@@ -128,6 +135,7 @@ def create_app(test_config=None):
         difficulty = body.get('difficulty', None)
         search = body.get('searchTerm', None)
         try:
+            # check if search term exists
             if search:
                 search_question = Question.query.order_by(Question.id).filter(
                     Question.question.ilike('%{}%'.format(search))).all()
@@ -140,10 +148,14 @@ def create_app(test_config=None):
                     "total_questions": len(search_question),
                 })
             else:
+                # search term doesn't exist. Proceed to insert the question
                 question = Question(answer=answer, question=question,
                                     category=category, difficulty=difficulty)
+                # Persist changes to the database
                 question.insert()
+                # Get an updated list of questions after the insert
                 updated_questions = Question.query.order_by(Question.id).all()
+                # paginate the selected questions
                 current_questions = _paginate(request, updated_questions)
                 if len(current_questions) == 0:
                     abort(404)
@@ -185,12 +197,16 @@ def create_app(test_config=None):
     '''
     @app.route('/quizzes', methods=['POST'])
     def play_quiz():
+        # Get the request payload
         body = request.get_json()
         previous_questions = body.get('previous_questions', None)
         quiz_category = body.get('quiz_category', None)
+
+        # check if request payload is empty
         if(quiz_category is None or previous_questions is None):
             abort(404)
         try:
+            # The All category has an id that doesnt belong to any category, so we use the type
             if quiz_category['type'] == "click":
                 quiz_questions = Question.query.filter(
                     Question.id.notin_(previous_questions)).all()
@@ -198,11 +214,13 @@ def create_app(test_config=None):
                 quiz_questions = Question.query.filter(
                     Question.category == str(quiz_category['id'])).filter(Question.id.notin_(previous_questions)).all()
 
+            # paginate the selected questions
             current_questions = _paginate(request, quiz_questions)
             if len(current_questions) == 0:
                 abort(404)
             return jsonify({
                 "success": True,
+                # choose a random question from the list
                 "question": random.choice(current_questions),
                 "total_questions": len(quiz_questions)
             })
