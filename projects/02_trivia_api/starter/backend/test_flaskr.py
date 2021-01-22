@@ -15,12 +15,14 @@ class TriviaTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client
         self.database_name = "trivia_test"
-        self.database_path = "postgres://{}:{}@{}/{}".format('student', 'student',
-                                                             'localhost:5432', self.database_name)
+        self.database_path = "postgres://{}:{}@{}/{}".format(
+            os.getenv('DB_USER'), os.getenv('DB_PSWD'),
+            os.getenv('DB_HOST'), self.database_name)
         setup_db(self.app, self.database_path)
 
         self.new_question = {
-            "question": "The Chinese New Year is celebrated on what day and month?",
+            "question": "The Chinese New Year is celebrated on what "
+            "day and month?",
             "answer": "25th January",
             "category": 5,
             "difficulty": 4}
@@ -38,14 +40,17 @@ class TriviaTestCase(unittest.TestCase):
 
     """
     TODO
-    Write at least one test for each test for successful operation and for expected errors.
+    Write at least one test for each test for successful
+    operation and for expected errors.
     """
 
     def test_get_paginated_questions(self):
         """
-        TEST: At this point, when you start the application you should see questions and categories generated,
-        ten questions per page and pagination at the bottom of the screen for three pages.
-        Clicking on the page numbers should update the questions.
+        TEST: At this point, when you start the application you
+        should see questions and categories generated, ten
+        questions per page and pagination at the bottom of
+        the screen for three pages. Clicking on the page
+        numbers should update the questions.
         """
         res = self.client().get('/questions')
         data = json.loads(res.data)
@@ -58,7 +63,9 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_404_invalid_page_request(self):
         """
-        TEST: When the page number does not exist, success should be False, an error status code is provided and an error message displayed to the user.
+        TEST: When the page number does not exist, success
+        should be False, an error status code is provided
+        and an error message displayed to the user.
         """
         res = self.client().get('/questions?page=100')
         data = json.loads(res.data)
@@ -70,8 +77,10 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_delete_question(self):
         """
-        TEST: When you click the trash icon next to a question, the question will be removed.
-        This removal will persist in the database and when you refresh the page.
+        TEST: When you click the trash icon next to a
+        question, the question will be removed.This removal
+        will persist in the database and when you refresh
+        the page.
         """
         res = self.client().delete('/questions/25')
         data = json.loads(res.data)
@@ -96,8 +105,10 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_add_new_question(self):
         '''
-        TEST: When you submit a question on the "Add" tab, the form will clear and
-        the question will appear at the end of the last page of the questions list in the "List" tab.
+        TEST: When you submit a question on the
+        "Add" tab, the form will clear and the
+        question will appear at the end of the last
+        page of the questions list in the "List" tab.
         '''
         res = self.client().post('/questions', json=self.new_question)
         data = json.loads(res.data)
@@ -172,6 +183,6 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["message"], "resource not found")
 
 
-        # Make the tests conveniently executable
+# Make the tests conveniently executable
 if __name__ == "__main__":
     unittest.main()
