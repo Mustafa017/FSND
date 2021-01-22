@@ -16,7 +16,8 @@ def create_app(test_config=None):
     setup_db(app)
     CORS(app, resources={r"/api/*": {"origins": "*"}})
     '''
-      @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
+      @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after
+      completing the TODOs
       '''
 
     '''
@@ -69,8 +70,10 @@ def create_app(test_config=None):
     def getQuestions():
         try:
             questions = Question.query.order_by(Question.id).all()
-            # category_id = Question.query.join(Category, Category.id == Question.category).distinct(
-            #     Question.category).add_columns(Category.id, Category.type).all()
+            # category_id = Question.query
+            # .join(Category, Category.id == Question.category)
+            # .distinct(Question.category)
+            # .add_columns(Category.id, Category.type).all()
             categories = Category.query.order_by(Category.id).all()
             category = [category.format() for category in categories]
             # paginate the selected questions
@@ -202,17 +205,21 @@ def create_app(test_config=None):
         previous_questions = body.get('previous_questions', None)
         quiz_category = body.get('quiz_category', None)
 
+        print(quiz_category['id'])
         # check if request payload is empty
         if(quiz_category is None or previous_questions is None):
             abort(404)
+
         try:
-            # The All category has an id that doesnt belong to any category, so we use the type
+            # The All category has an id that doesnt belong to any category,
+            # so we use the type
             if quiz_category['type'] == "click":
                 quiz_questions = Question.query.filter(
                     Question.id.notin_(previous_questions)).all()
             else:
                 quiz_questions = Question.query.filter(
-                    Question.category == str(quiz_category['id'])).filter(Question.id.notin_(previous_questions)).all()
+                    Question.category == str(quiz_category['id'])).filter(
+                        Question.id.notin_(previous_questions)).all()
 
             # paginate the selected questions
             current_questions = _paginate(request, quiz_questions)
