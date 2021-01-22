@@ -86,7 +86,8 @@ def create_app(test_config=None):
                 "categories": category,
                 "total_questions": len(questions)
             })
-        except:
+        except Exception as e:
+            print(e)
             abort(400)
 
         '''
@@ -113,7 +114,8 @@ def create_app(test_config=None):
                 "questions": current_questions,
                 "total_questions": len(updated_questions)
             })
-        except:
+        except Exception as e:
+            print(e)
             abort(422)
 
         '''
@@ -168,7 +170,8 @@ def create_app(test_config=None):
                     "questions": current_questions,
                     "total_questions": len(updated_questions),
                 })
-        except:
+        except Exception as e:
+            print(e)
             abort(422)
 
         '''
@@ -188,7 +191,8 @@ def create_app(test_config=None):
                 "questions": current_questions,
                 "total_questions": len(question)
             })
-        except:
+        except Exception as e:
+            print(e)
             abort(404)
 
         '''
@@ -231,7 +235,8 @@ def create_app(test_config=None):
                 "question": random.choice(current_questions),
                 "total_questions": len(quiz_questions)
             })
-        except:
+        except Exception as e:
+            print(e)
             abort(404)
 
         '''
