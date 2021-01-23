@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { withRouter } from "react-router-dom";
 import $ from "jquery";
 
 import "../stylesheets/FormView.css";
@@ -50,6 +51,7 @@ class FormView extends Component {
       crossDomain: true,
       success: (result) => {
         document.getElementById("add-question-form").reset();
+        this.props.history.push("/");
         return;
       },
       error: (error) => {
@@ -109,4 +111,4 @@ class FormView extends Component {
   }
 }
 
-export default FormView;
+export default withRouter(FormView);
