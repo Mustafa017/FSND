@@ -37,7 +37,7 @@ def getDrink():
     return jsonify({
         "success": True,
         "drinks": format_drinks
-    })
+    }), 200
 
 
 '''
@@ -59,7 +59,7 @@ def getDrinkDetail():
     return jsonify({
         "success": True,
         "drinks": format_drinks
-    })
+    }), 200
 
 
 '''
@@ -84,6 +84,9 @@ def add_drinks():
     if(title is None or recipe is None):
         abort(404)
 
+    if type(recipe) != list:
+        recipe = [recipe]
+
     try:
         drinks = Drink(title=title, recipe=json.dumps(recipe))
         # Persist changes to database
@@ -95,7 +98,7 @@ def add_drinks():
         return jsonify({
             "success": True,
             "drinks": formatted_drink
-        })
+        }), 200
     except Exception as e:
         print(e)
         abort(422)
@@ -130,12 +133,12 @@ def updateDrink(id):
         # check if drink exixts in db
         if (selection is None):
             abort(404)
-        if(title and recipe):
+        if(title):
             selection.title = title
-            selection.recipe = json.dumps(recipe)
-        elif(title):
-            selection.title = title
-        else:
+
+        if(recipe):
+            if(type(recipe) != list):
+                recipe = [recipe]
             selection.recipe = json.dumps(recipe)
 
         selection.update()
@@ -145,7 +148,7 @@ def updateDrink(id):
         return jsonify({
             "success": True,
             "drinks": formatted_drink
-        })
+        }), 200
     except Exception as e:
         print(e)
         abort(422)
@@ -177,7 +180,7 @@ def deleteDrink(id):
         return jsonify({
             "success": True,
             "delete": selection.id
-        })
+        }), 200
     except Exception as e:
         print(e)
         abort(422)
@@ -232,3 +235,12 @@ def not_found(error):
 @DONE implement error handler for AuthError
     error handler should conform to general task above
 '''
+
+
+@app.errorhandler(AuthError)
+def authError(error):
+    return jsonify({
+        "success": False,
+        "error": error.status_code,
+        "message": error.error['description']
+    }), error.status_code
