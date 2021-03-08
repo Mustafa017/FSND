@@ -71,7 +71,6 @@ export class AuthService {
   logout() {
     this.token = '';
     this.payload = null;
-    this.set_jwt();
   }
 
   can(permission: string) {
