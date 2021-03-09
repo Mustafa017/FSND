@@ -30,7 +30,6 @@ CORS(app)
 
 
 @app.route('/drinks')
-@requires_auth('get:drinks-detail')
 def getDrink():
     drinks = Drink.query.order_by(Drink.id).all()
     format_drinks = [drink.short() for drink in drinks]
