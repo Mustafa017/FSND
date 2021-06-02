@@ -1,11 +1,13 @@
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
 
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+# TODO Implement Show and Artist models, and complete all model relationships
+# and properties, as a database migration.
 venue_genres = db.Table('Venue_genres',
                         db.Column('venue_id', db.Integer,
                                   db.ForeignKey('Venue.id'), primary_key=True),
@@ -26,10 +28,6 @@ class Show(db.Model):
     venue_id = db.Column(db.Integer, db.ForeignKey(
         'Venue.id'), primary_key=True)
     start_time = db.Column(db.String(250), primary_key=True)
-    artist = db.relationship(
-        'Artist', backref=db.backref('show', lazy=True))
-    venue = db.relationship(
-        'Venue', backref=db.backref('show', lazy=True))
 
     def __repr__(self):
         return f'<Show: Artist={self.artist_id} venue={self.venue_id} start={self.start_time}>'
