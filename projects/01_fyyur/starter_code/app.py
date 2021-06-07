@@ -15,7 +15,7 @@ import json
 import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash,\
-    redirect, url_for
+    redirect, url_for, abort
 # ----------------------------------------------------------------------------#
 # App Config.
 # ----------------------------------------------------------------------------#
@@ -237,6 +237,40 @@ def create_venue_submission():
     # e.g., flash('An error occurred. Venue ' + data.name +
     # ' could not be listed.')
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+
+    name = request.form.get('name')
+    city = request.form.get('city')
+    state = request.form.get('city')
+    address = request.form.get('address')
+    genres = request.form.getlist('genres')
+    fb_link = request.form.get('fb_link')
+    phone = request.form.get('phone')
+
+    print(genres)
+    genre_ids = []
+    for genre in genres:
+        gen_id = db.session.query(Genre.id).filter(
+            Genre.name == genre).one_or_none()
+        genre_ids.append(gen_id[0])
+    print(genre_ids)
+
+    try:
+        if(request.form):
+            venue = Venue(name=name, city=city, state=state,
+                          address=address, phone=phone, facebook_link=fb_link)
+            db.session.add(venue)
+            for gen_id in genre_ids:
+                # use Identity map to maintains a unique instance of Genre
+                venue.genres.append(db.session.get(Genre, gen_id))
+
+            all_venn = db.session.query(Venue).all()
+            print(all_venn)
+            all_ven_gen = db.session.query(venue_genres).all()
+            print(all_ven_gen)
+    except:
+        db.session.rollback()
+        abort(500)
+
     return render_template('pages/home.html')
 
 
