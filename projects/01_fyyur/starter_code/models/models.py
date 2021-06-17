@@ -50,10 +50,10 @@ class Venue(db.Model):
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-    website = db.Column(db.String(120))
+    facebook_link = db.Column(db.String(500))
+    website = db.Column(db.String(500))
     seeking_talent = db.Column(db.Boolean, nullable=False, default=True)
-    seeking_description = db.Column(db.String(120))
+    seeking_description = db.Column(db.String(250))
 
     def __repr__(self):
         return f'<Venue {self.id}: {self.name}>'
