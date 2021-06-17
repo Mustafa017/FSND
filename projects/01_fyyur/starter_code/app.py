@@ -2,6 +2,7 @@
 # Imports
 # ----------------------------------------------------------------------------#
 
+from re import search
 from models import Venue, Artist, Show, Genre, artist_genres, venue_genres, db
 from flask_migrate import Migrate
 from forms import *
@@ -97,21 +98,15 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-    # TODO: implement search on artists with partial string search.
+    # Done: implement search on artists with partial string search.
     # Ensure it is case-insensitive.
     # seach for Hop should return "The Musical Hop".
     # search for "Music" should return "The Musical Hop" and
     # "Park Square Live Music & Coffee"
-    response = {
-        "count": 1,
-        "data": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
-    }
-    return render_template('pages/search_venues.html', results=response,
-                           search_term=request.form.get('search_term', ''))
+
+    response = _search(Venue, upcoming_shows_by_venue)
+
+    return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 
 @app.route('/venues/<int:venue_id>')
@@ -215,6 +210,40 @@ def get_genre_by_artist(artist_id):
         join(Genre, artist_genres.c.genre_id == Genre.id).\
         filter(artist_genres.c.artist_id == artist_id).all()
 
+
+def _search(entity, upcoming_show_fn):
+    search = request.form.get('search_term', None)
+
+    if(search is None):
+        selections = db.session.query(entity).all()
+    else:
+        selections = db.session.query(entity).filter(
+            entity.name.ilike('%{}%'.format(search))).all()
+
+    data = []
+    for selection in selections:
+        info = {
+            "id": selection.id,
+            "name": selection.name,
+            "num_upcoming_shows": upcoming_show_fn(selection.id)
+        }
+        data.append(info)
+
+    response = {
+        "count": len(selections),
+        "data": data
+    }
+    return response
+
+
+def _get_genre_id(form_genres):
+    genre_ids = []
+    for genre in form_genres:
+        gen_id = db.session.query(Genre.id).filter(
+            Genre.name == genre).one_or_none()
+        genre_ids.append(gen_id[0])
+    return genre_ids
+
 # ----------------------------------------------------------------------------#
 #  Create Venue
 # ----------------------------------------------------------------------------#
@@ -228,48 +257,40 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    # TODO: insert form data as a new Venue record in the db, instead
+    # DONE: insert form data as a new Venue record in the db, instead
     # TODO: modify data to be the data object returned from db insertion
-
-    # on successful db insert, flash success
-    flash('Venue ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Venue ' + data.name +
-    # ' could not be listed.')
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
 
-    name = request.form.get('name')
-    city = request.form.get('city')
-    state = request.form.get('city')
-    address = request.form.get('address')
-    genres = request.form.getlist('genres')
-    fb_link = request.form.get('fb_link')
-    phone = request.form.get('phone')
-
-    print(genres)
-    genre_ids = []
-    for genre in genres:
-        gen_id = db.session.query(Genre.id).filter(
-            Genre.name == genre).one_or_none()
-        genre_ids.append(gen_id[0])
-    print(genre_ids)
+    name = request.form.get('name', None)
+    city = request.form.get('city', None)
+    state = request.form.get('state', None)
+    address = request.form.get('address', None)
+    genres = request.form.getlist('genres', None)
+    fb_link = request.form.get('fb_link', None)
+    phone = request.form.get('phone', None)
 
     try:
         if(request.form):
             venue = Venue(name=name, city=city, state=state,
                           address=address, phone=phone, facebook_link=fb_link)
             db.session.add(venue)
+            genre_ids = _get_genre_id(genres)
             for gen_id in genre_ids:
                 # use Identity map to maintains a unique instance of Genre
                 venue.genres.append(db.session.get(Genre, gen_id))
+            db.session.commit()
 
-            all_venn = db.session.query(Venue).all()
-            print(all_venn)
-            all_ven_gen = db.session.query(venue_genres).all()
-            print(all_ven_gen)
-    except:
+            # on successful db insert, flash success
+            flash('Venue ' + request.form['name'] +
+                  ' was successfully listed!')
+        else:
+            abort(500)
+    except Exception as e:
+        print(e)
         db.session.rollback()
-        abort(500)
+        # DONE: on unsuccessful db insert, flash an error instead.
+        flash('An error occurred. Venue ' +
+              request.form['name'] + ' could not be listed.')
 
     return render_template('pages/home.html')
 
@@ -299,18 +320,12 @@ def artists():
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-    # TODO: implement search on artists with partial string search.
+    # Done: implement search on artists with partial string search.
     # Ensure it is case-insensitive. Seach for "A" should return
     # "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
-    response = {
-        "count": 1,
-        "data": [{
-            "id": 4,
-            "name": "Guns N Petals",
-            "num_upcoming_shows": 0,
-        }]
-    }
+
+    response = _search(Artist, upcoming_shows_by_artist)
     return render_template('pages/search_artists.html', results=response,
                            search_term=request.form.get('search_term', ''))
 
@@ -438,13 +453,33 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
     # called upon submitting the new artist listing form
-    # TODO: insert form data as a new Venue record in the db, instead
+    # DONE: insert form data as a new Venue record in the db, instead
     # TODO: modify data to be the data object returned from db insertion
 
-    # on successful db insert, flash success
-    flash('Artist ' + request.form['name'] + ' was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
+    name = request.form.get('name', None)
+    city = request.form.get('city', None)
+    state = request.form.get('state', None)
+    genres = request.form.getlist('genres', None)
+    fb_link = request.form.get('fb_link', None)
+    phone = request.form.get('phone', None)
+
+    try:
+        artist = Artist(name=name, city=city, state=state,
+                        facebook_link=fb_link, phone=phone)
+        db.session.add(artist)
+        form_genres = _get_genre_id(genres)
+        for genre in form_genres:
+            # use Identity map to maintains a unique instance of Genre
+            artist.genres.append(db.session.get(Genre, genre))
+        db.session.commit()
+        # on successful db insert, flash success
+        flash('Artist ' + request.form['name'] + ' was successfully listed!')
+    except Exception as e:
+        print(e)
+        # DONE: on unsuccessful db insert, flash an error instead.
+        flash('An error occurred. Artist ' +
+              request.form['name'] + ' could not be listed.')
+
     return render_template('pages/home.html')
 
 # ----------------------------------------------------------------------------#
@@ -491,11 +526,23 @@ def create_show_submission():
     # listing form
     # TODO: insert form data as a new Show record in the db, instead
 
-    # on successful db insert, flash success
-    flash('Show was successfully listed!')
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+    artist_id = request.form.get('artist_id', None)
+    venue_id = request.form.get('venue_id', None)
+    start_time = request.form.get('start_time', None)
+
+    try:
+        artist = db.session.get(Artist, artist_id)
+        venue = db.session.get(Venue, venue_id)
+        show = Show(start_time=start_time)
+
+        # on successful db insert, flash success
+        flash('Show was successfully listed!')
+    except Exception as e:
+        print(e)
+        # DONE: on unsuccessful db insert, flash an error instead.
+        # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+        flash('An error occurred. Show could not be listed.')
+
     return render_template('pages/home.html')
 
 
