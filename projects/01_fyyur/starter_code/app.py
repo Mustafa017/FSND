@@ -534,6 +534,10 @@ def create_show_submission():
         artist = db.session.get(Artist, artist_id)
         venue = db.session.get(Venue, venue_id)
         show = Show(start_time=start_time)
+        show.artist = artist
+        show.venue = venue
+        db.session.add(show)
+        db.session.commit()
 
         # on successful db insert, flash success
         flash('Show was successfully listed!')
