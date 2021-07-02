@@ -36,9 +36,9 @@ class Show(db.Model):
         'Venue.id'), primary_key=True)
     start_time = db.Column(db.String(250), primary_key=True)
     artist = db.relationship(
-        'Artist', backref=db.backref('show', lazy=True))
+        'Artist', backref=db.backref('show', cascade="all, delete-orphan", lazy=True))
     venue = db.relationship(
-        'Venue', backref=db.backref('show', lazy=True))
+        'Venue', backref=db.backref('show', cascade="all, delete-orphan", lazy=True))
 
     def __repr__(self):
         return f'<Show: Artist={self.artist_id} venue={self.venue_id} start={self.start_time}>'
@@ -94,4 +94,4 @@ class Genre(db.Model):
         'Artist', secondary=artist_genres, backref=db.backref('genres', lazy=True))
 
     def __repr__(self):
-        return f'<Genre {self.id}: {self.name}>'
+        return f'{self.name}'
