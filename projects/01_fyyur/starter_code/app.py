@@ -3,11 +3,13 @@
 # ----------------------------------------------------------------------------#
 
 from re import search
+
+from flask.json import jsonify
 from models import Venue, Artist, Show, Genre, artist_genres, venue_genres, db
 from flask_migrate import Migrate
 from forms import *
 from flask_wtf import Form
-from logging import Formatter, FileHandler
+from logging import Formatter, FileHandler, error
 import logging
 from sqlalchemy.sql import func
 from flask_sqlalchemy import SQLAlchemy
@@ -295,7 +297,7 @@ def create_venue_submission():
     return render_template('pages/home.html')
 
 
-@app.route('/venues/<venue_id>', methods=['DELETE'])
+@app.route('/venues/<int:venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
     # TODO: Complete this endpoint for taking a venue_id, and using
     # SQLAlchemy ORM to delete a record. Handle cases where the session
@@ -304,7 +306,21 @@ def delete_venue(venue_id):
     # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page,
     # have it so that clicking that button delete it from the db then redirect
     # the user to the homepage
-    return None
+    error = False
+
+    try:
+        selection = db.session.get(Venue, venue_id)
+        db.session.delete(selection)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        db.session.rollback()
+        error = True
+
+    if error:
+        abort(500)
+    else:
+        return jsonify({'success': True})
 
 # ----------------------------------------------------------------------------#
 #  Artists
@@ -386,57 +402,79 @@ def show_artist(artist_id):
 
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
-    form = ArtistForm()
-    artist = {
-        "id": 4,
-        "name": "Guns N Petals",
-        "genres": ["Rock n Roll"],
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "326-123-5000",
-        "website": "https://www.gunsnpetalsband.com",
-        "facebook_link": "https://www.facebook.com/GunsNPetals",
-        "seeking_venue": True,
-        "seeking_description": "Looking for shows to perform at in the San Francisco Bay Area!",
-        "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
-    }
-    # TODO: populate form with fields from artist with ID <artist_id>
+    artist = db.session.get(Artist, artist_id)
+    genres = [(name, name) for name in artist.genres]
+
+    # DONE: populate form with fields from artist with ID <artist_id>
+    form = ArtistForm(obj=artist, data=genres)
     return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
 def edit_artist_submission(artist_id):
-    # TODO: take values from the form submitted, and update existing
+    # DONE: take values from the form submitted, and update existing
     # artist record with ID <artist_id> using the new attributes
+    name = request.form.get('name', None)
+    city = request.form.get('city', None)
+    state = request.form.get('state', None)
+    genres = request.form.getlist('genres', None)
+    fb_link = request.form.get('fb_link', None)
+    phone = request.form.get('phone', None)
+
+    artist = db.session.get(Artist, artist_id)
+    artist.name = name
+    artist.city = city
+    artist.state = state
+    artist.fb_link = fb_link
+    artist.phone = phone
+
+    form_genres = _get_genre_id(genres)
+    for genre in form_genres:
+        # use Identity map to maintains a unique instance of Genre
+        artist.genres.append(db.session.get(Genre, genre))
+    db.session.add(artist)
+    db.session.commit()
 
     return redirect(url_for('show_artist', artist_id=artist_id))
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
-    form = VenueForm()
-    venue = {
-        "id": 1,
-        "name": "The Musical Hop",
-        "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-        "address": "1015 Folsom Street",
-        "city": "San Francisco",
-        "state": "CA",
-        "phone": "123-123-1234",
-        "website": "https://www.themusicalhop.com",
-        "facebook_link": "https://www.facebook.com/TheMusicalHop",
-        "seeking_talent": True,
-        "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-        "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60"
-    }
-    # TODO: populate form with values from venue with ID <venue_id>
+    venue = db.session.get(Venue, venue_id)
+    genres = [(name, name) for name in venue.genres]
+
+    # DONE: populate form with values from venue with ID <venue_id>
+    form = VenueForm(obj=venue, data=genres)
     return render_template('forms/edit_venue.html', form=form, venue=venue)
 
 
 @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-    # TODO: take values from the form submitted, and update existing
+    # DONE: take values from the form submitted, and update existing
     # venue record with ID <venue_id> using the new attributes
+    name = request.form.get('name', None)
+    city = request.form.get('city', None)
+    state = request.form.get('state', None)
+    address = request.form.get('address', None)
+    genres = request.form.getlist('genres', None)
+    fb_link = request.form.get('fb_link', None)
+    phone = request.form.get('phone', None)
+
+    venue = db.session.get(Venue, venue_id)
+    venue.name = name
+    venue.city = city
+    venue.state = state
+    venue.address = address
+    venue.fb_link = fb_link
+    venue.phone = phone
+
+    form_genres = _get_genre_id(genres)
+    for genre in form_genres:
+        # use Identity map to maintains a unique instance of Genre
+        venue.genres.append(db.session.get(Genre, genre))
+    db.session.add(venue)
+    db.session.commit()
+
     return redirect(url_for('show_venue', venue_id=venue_id))
 
 # ----------------------------------------------------------------------------#
@@ -524,7 +562,7 @@ def create_shows():
 def create_show_submission():
     # called to create new shows in the db, upon submitting new show
     # listing form
-    # TODO: insert form data as a new Show record in the db, instead
+    # DONE: insert form data as a new Show record in the db, instead
 
     artist_id = request.form.get('artist_id', None)
     venue_id = request.form.get('venue_id', None)

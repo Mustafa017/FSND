@@ -12,6 +12,10 @@
 					<h5>{{ venue.name }}</h5>
 				</div>
 			</a>
+			<a href="/venues/{{ venue.id }}/edit">
+				<i class="fa fa-edit text-success" id="edit"></i>
+			</a>
+			<i class="fa fa-times text-danger remove" data-id="{{venue.id}}"></i>
 		</li>
 		{% endfor %}
 	</ul>
