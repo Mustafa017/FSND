@@ -81,15 +81,10 @@ def venues():
 
         venue = []
         for cityVenue in cityVenues:
-            ven_name = cityVenue.name
             ven_id = cityVenue.id
-
-            ven_shows = upcoming_shows_by_venue(ven_id)
-            venue.append({
-                "id": ven_id,
-                "name": ven_name,
-                "num_upcoming_shows": len(ven_shows)
-            })
+            venue_obj = db.session.get(Venue, ven_id)
+            ven_shows = venue_obj.short_format
+            venue.append(ven_shows)
         data.append({
             "city": city,
             "state": state,
@@ -106,7 +101,7 @@ def search_venues():
     # search for "Music" should return "The Musical Hop" and
     # "Park Square Live Music & Coffee"
 
-    response = _search(Venue, upcoming_shows_by_venue)
+    response = _search(Venue)
 
     return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
@@ -115,95 +110,21 @@ def search_venues():
 def show_venue(venue_id):
     # shows the venue page with the given venue_id
     # DONE: replace with real venue data from the venues table, using venue_id
-    venue_details = db.session.query(Venue).filter(Venue.id == venue_id).all()
-    upcoming_shows = upcoming_shows_by_venue(venue_id)
-    past_shows = past_shows_by_venue(venue_id)
-    genres = get_genre_by_venue(venue_id)
-    next_shows = []
-    prev_shows = []
-    genre_list = []
-    for show_artist in upcoming_shows:
-        next_shows.append({
-            "artist_id": show_artist.id,
-            "artist_name": show_artist.name,
-            "artist_image_link": show_artist.image_link,
-            "start_time": show_artist.start_time
-        })
+    venue_details = db.session.get(Venue, venue_id)
 
-    for past_artist in past_shows:
-        prev_shows.append({
-            "artist_id": past_artist.id,
-            "artist_name": past_artist.name,
-            "artist_image_link": past_artist.image_link,
-            "start_time": past_artist.start_time
-        })
+    data = venue_details.long_format
+    artists = db.session.query(Show).filter(Show.venue_id == venue_id).all()
+    for artist in artists:
+        artist_id = artist.artist_id
+        artist = db.session.get(Artist, artist_id)
+        upcoming_shows = artist.upcoming_shows
+        past_shows = artist.past_shows
+        data['upcoming_shows'] = upcoming_shows
+        data['past_shows'] = past_shows
+        data['upcoming_shows_count'] = len(upcoming_shows)
+        data['past_shows_count'] = len(past_shows)
 
-    for genre in genres:
-        genre_list.append(genre.name)
-
-    for venue_detail in venue_details:
-        data = {
-            "id": venue_detail.id,
-            "name": venue_detail.name,
-            "genres": genre_list,
-            "address": venue_detail.address,
-            "city": venue_detail.city,
-            "state": venue_detail.state,
-            "phone": venue_detail.phone,
-            "website": venue_detail.website,
-            "facebook_link": venue_detail.facebook_link,
-            "seeking_talent": venue_detail.seeking_talent,
-            "seeking_description": venue_detail.seeking_description,
-            "image_link": venue_detail.image_link,
-            "past_shows": prev_shows,
-            "upcoming_shows": next_shows,
-            "past_shows_count": len(past_shows),
-            "upcoming_shows_count": len(upcoming_shows),
-        }
     return render_template('pages/show_venue.html', venue=data)
-
-
-def upcoming_shows_by_venue(venue_id):
-    return db.session.query(Show.start_time, Artist.id, Artist.name,
-                            Artist.image_link).\
-        join(Artist, Artist.id == Show.artist_id).\
-        join(Venue, Venue.id == Show.venue_id).\
-        filter((Show.venue_id == venue_id) & (
-            Show.start_time >= str(datetime.now()))).all()
-
-
-def past_shows_by_venue(venue_id):
-    return db.session.query(Show.start_time, Artist.id, Artist.name,
-                            Artist.image_link).\
-        join(Artist, Artist.id == Show.artist_id).\
-        join(Venue, Venue.id == Show.venue_id).\
-        filter((Show.venue_id == venue_id) & (
-            Show.start_time < str(datetime.now()))).all()
-
-
-def get_genre_by_venue(venue_id):
-    return db.session.query(venue_genres, Genre.name).\
-        join(Venue, venue_genres.c.venue_id == Venue.id).\
-        join(Genre, venue_genres.c.genre_id == Genre.id).\
-        filter(venue_genres.c.venue_id == venue_id).all()
-
-
-def upcoming_shows_by_artist(artist_id):
-    return db.session.query(Show.start_time, Venue.id, Venue.name,
-                            Venue.image_link).\
-        join(Artist, Artist.id == Show.artist_id).\
-        join(Venue, Venue.id == Show.venue_id).\
-        filter((Show.artist_id == artist_id) & (
-            Show.start_time >= str(datetime.now()))).all()
-
-
-def past_shows_by_artist(artist_id):
-    return db.session.query(Show.start_time, Artist.id, Artist.name,
-                            Artist.image_link).\
-        join(Artist, Artist.id == Show.artist_id).\
-        join(Venue, Venue.id == Show.venue_id).\
-        filter((Show.artist_id == artist_id) & (
-            Show.start_time < str(datetime.now()))).all()
 
 
 def get_genre_by_artist(artist_id):
@@ -213,7 +134,7 @@ def get_genre_by_artist(artist_id):
         filter(artist_genres.c.artist_id == artist_id).all()
 
 
-def _search(entity, upcoming_show_fn):
+def _search(entity):
     search = request.form.get('search_term', None)
 
     if(search is None):
@@ -224,27 +145,16 @@ def _search(entity, upcoming_show_fn):
 
     data = []
     for selection in selections:
-        info = {
-            "id": selection.id,
-            "name": selection.name,
-            "num_upcoming_shows": upcoming_show_fn(selection.id)
-        }
-        data.append(info)
+        select_id = selection.id
+        select_obj = db.session.get(entity, select_id)
+        venue_shows = select_obj.short_format
+        data.append(venue_shows)
 
     response = {
         "count": len(selections),
         "data": data
     }
     return response
-
-
-def _get_genre_id(form_genres):
-    genre_ids = []
-    for genre in form_genres:
-        gen_id = db.session.query(Genre.id).filter(
-            Genre.name == genre).one_or_none()
-        genre_ids.append(gen_id[0])
-    return genre_ids
 
 # ----------------------------------------------------------------------------#
 #  Create Venue
@@ -276,10 +186,13 @@ def create_venue_submission():
             venue = Venue(name=name, city=city, state=state,
                           address=address, phone=phone, facebook_link=fb_link)
             db.session.add(venue)
-            genre_ids = _get_genre_id(genres)
-            for gen_id in genre_ids:
+
+            for genre in genres:
+                genre_id = db.session.query(Genre.id).filter(
+                    Genre.name == genre).one_or_none()
                 # use Identity map to maintains a unique instance of Genre
-                venue.genres.append(db.session.get(Genre, gen_id))
+                genre_obj = db.session.get(Genre, genre_id)
+                venue.genres.append(genre_obj)
             db.session.commit()
 
             # on successful db insert, flash success
@@ -341,7 +254,7 @@ def search_artists():
     # "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
     # search for "band" should return "The Wild Sax Band".
 
-    response = _search(Artist, upcoming_shows_by_artist)
+    response = _search(Artist)
     return render_template('pages/search_artists.html', results=response,
                            search_term=request.form.get('search_term', ''))
 
@@ -350,50 +263,19 @@ def search_artists():
 def show_artist(artist_id):
     # shows the venue page with the given venue_id
     # DONE: replace with real venue data from the venues table, using venue_id
-    artist_details = db.session.query(Artist).\
-        filter(Artist.id == artist_id).all()
-    upcoming_shows = upcoming_shows_by_artist(artist_id)
-    past_shows = past_shows_by_artist(artist_id)
-    genres = get_genre_by_artist(artist_id)
-    next_shows = []
-    prev_shows = []
-    genre_list = []
+    artist_details = db.session.get(Artist, artist_id)
+    data = artist_details.long_format
 
-    for show_venue in upcoming_shows:
-        next_shows.append({
-            "venue_id": show_venue.id,
-            "venue_name": show_venue.name,
-            "venue_image_link": show_venue.image_link,
-            "start_time": show_venue.start_time
-        })
+    for artist in artist_details.show:
+        venue_id = artist.venue_id
+        venue_obj = db.session.get(Venue, venue_id)
+        upcoming_shows = venue_obj.upcoming_shows
+        past_shows = venue_obj.past_shows
+        data['upcoming_shows'] = upcoming_shows
+        data['past_shows'] = past_shows
+        data['upcoming_shows_count'] = len(upcoming_shows)
+        data['past_shows_count'] = len(past_shows)
 
-    for past_venue in past_shows:
-        prev_shows.append({
-            "venue_id": past_venue.id,
-            "venue_name": past_venue.name,
-            "venue_image_link": past_venue.image_link,
-            "start_time": past_venue.start_time
-        })
-
-    for genre in genres:
-        genre_list.append(genre.name)
-
-    for artist in artist_details:
-        data = {
-            "id": artist.id,
-            "name": artist.name,
-            "genres": genre_list,
-            "city": artist.city,
-            "state": artist.state,
-            "phone": artist.phone,
-            "seeking_venue": artist.seeking_venue,
-            "seeking_description": artist.seeking_description,
-            "image_link": artist.image_link,
-            "past_shows": prev_shows,
-            "upcoming_shows": next_shows,
-            "past_shows_count": len(past_shows),
-            "upcoming_shows_count": len(upcoming_shows),
-        }
     return render_template('pages/show_artist.html', artist=data)
 
 #  Update
@@ -428,10 +310,13 @@ def edit_artist_submission(artist_id):
     artist.fb_link = fb_link
     artist.phone = phone
 
-    form_genres = _get_genre_id(genres)
-    for genre in form_genres:
+    for genre in genres:
+        genre_id = db.session.query(Genre.id).filter(
+            Genre.name == genre).one_or_none()
         # use Identity map to maintains a unique instance of Genre
-        artist.genres.append(db.session.get(Genre, genre))
+        genre_obj = db.session.get(Genre, genre_id)
+        artist.genres.append(genre_obj)
+
     db.session.add(artist)
     db.session.commit()
 
@@ -468,10 +353,12 @@ def edit_venue_submission(venue_id):
     venue.fb_link = fb_link
     venue.phone = phone
 
-    form_genres = _get_genre_id(genres)
-    for genre in form_genres:
+    for genre in genres:
+        genre_id = db.session.query(Genre.id).filter(
+            Genre.name == genre).one_or_none()
         # use Identity map to maintains a unique instance of Genre
-        venue.genres.append(db.session.get(Genre, genre))
+        genre_obj = db.session.get(Genre, genre_id)
+        venue.genres.append(genre_obj)
     db.session.add(venue)
     db.session.commit()
 
@@ -502,13 +389,16 @@ def create_artist_submission():
     phone = request.form.get('phone', None)
 
     try:
-        artist = Artist(name=name, city=city, state=state,
-                        facebook_link=fb_link, phone=phone)
+        artist = Artist(name, city, state, phone, fb_link)
         db.session.add(artist)
-        form_genres = _get_genre_id(genres)
-        for genre in form_genres:
+
+        for genre in genres:
+            genre_id = db.session.query(Genre.id).filter(
+                Genre.name == genre).one_or_none()
             # use Identity map to maintains a unique instance of Genre
-            artist.genres.append(db.session.get(Genre, genre))
+            genre_obj = db.session.get(Genre, genre_id)
+            artist.genres.append(genre_obj)
+
         db.session.commit()
         # on successful db insert, flash success
         flash('Artist ' + request.form['name'] + ' was successfully listed!')
