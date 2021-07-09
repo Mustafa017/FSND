@@ -127,13 +127,6 @@ def show_venue(venue_id):
     return render_template('pages/show_venue.html', venue=data)
 
 
-def get_genre_by_artist(artist_id):
-    return db.session.query(artist_genres, Genre.name).\
-        join(Artist, artist_genres.c.artist_id == Artist.id).\
-        join(Genre, artist_genres.c.genre_id == Genre.id).\
-        filter(artist_genres.c.artist_id == artist_id).all()
-
-
 def _search(entity):
     search = request.form.get('search_term', None)
 
