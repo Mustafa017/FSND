@@ -1,4 +1,3 @@
-# from FSND.projects.capstone.starter import config
 from flask_migrate import Migrate, migrate
 from flask_sqlalchemy import SQLAlchemy
 
@@ -11,6 +10,7 @@ def setup_db(app):
         db.app = app
         db.init_app(app)
         migrate = Migrate(app, db)
+        return db
     except Exception as e:
         print(e)
 

@@ -21,6 +21,18 @@ class Student(db.Model):
         self.std_dob = dob
         self.std_gender = gender
 
+    @property
+    def format(self):
+        return {
+            "student_id": self.std_id,
+            "student_regno": self.std_regno,
+            "student_first_name": self.std_fname,
+            "student_last_name": self.std_lname,
+            "student_email": self.std_email,
+            "student_dob": self.std_dob,
+            "student_sex": self.std_gender,
+        }
+
     def __repr__(self) -> str:
         return f'id:{self.std_id}, Reg_no:{self.std_regno}, \
             first name:{self.std_fname}, Last_name:{self.std_lname}'
