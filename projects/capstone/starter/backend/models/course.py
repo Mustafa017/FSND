@@ -8,6 +8,10 @@ class Course(db.Model):
     crs_title = db.Column(db.String(50), unique=True, nullable=False)
     crs_desc = db.Column(db.Text, nullable=False)
     crs_book = db.Column(db.String(255))
+    crs_lec_id = db.Column(db.Integer, db.ForeignKey(
+        'lecturer.lec_id'), nullable=False)
+    crs_cls_id = db.Column(db.Integer, db.ForeignKey(
+        'classroom.cls_id'), nullable=False)
 
     def __init__(self, code, title, desc, book) -> None:
         self.crs_code = code

@@ -10,6 +10,8 @@ class Student(db.Model):
     std_email = db.Column(db.String(30), unique=True, nullable=False)
     std_dob = db.Column(db.String(10), nullable=False)
     std_gender = db.Column(db.String(10), nullable=False)
+    enrollments = db.relationship('Enrollments', backref=db.backref(
+        'students', lazy=True))
 
     def __init__(self, regno, fname, lname, email, dob, gender) -> None:
         self.std_regno = regno

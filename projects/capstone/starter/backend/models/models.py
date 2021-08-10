@@ -1,7 +1,6 @@
 # from FSND.projects.capstone.starter import config
 from flask_migrate import Migrate, migrate
 from flask_sqlalchemy import SQLAlchemy
-# from .config import Config
 
 
 db = SQLAlchemy()
@@ -22,8 +21,12 @@ class Enrollments(db.Model):
                           primary_key=True)
     se_std_id = db.Column(db.Integer, db.ForeignKey('student.std_id'),
                           primary_key=True)
-    se_date = db.Column(db.String(30), nullable=False)
-    student = db.relationship('Student', backref=db.backref(
-        'enrollments', cascade="all, delete-orphan", lazy=True))
-    course = db.relationship('Course', backref=db.backref(
-        'enrollments', cascade="all, delete-orphan", lazy=True))
+    se_semester = db.Column(db.String(30), primary_key=True)
+    course = db.relationship('Course', backref='enrollments', lazy=True)
+
+    def __init__(self, semester):
+        self.se_semester = semester
+
+    def __repr__(self) -> str:
+        return "Course ID {} Student ID {} Semester {}".format(
+            self.se_crs_id, self.se_std_id, self.se_semester)
