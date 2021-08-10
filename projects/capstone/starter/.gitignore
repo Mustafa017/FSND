@@ -1,8 +1,7 @@
 # file #
 */node_modules/**
 /backend/config.py
-/backend/run_terminal.py
-
+/Student Enrollment capstone.pdf
 # Compiled source #
 ###################
 *.com
