@@ -40,6 +40,22 @@ def create_app(test_config=None):
         except Exception:
             raise sys.exc_info()[1]
 
+    @app.route('/students/<int:student_id>')
+    def get_student_by_id(student_id):
+        try:
+            student = db.session.query(Student).filter(
+                Student.std_id == student_id).one_or_none()
+            if student is None:
+                abort(404)
+            else:
+                format_student = student.format
+                return jsonify({
+                    "success": True,
+                    "student": format_student,
+                })
+        except Exception:
+            raise sys.exc_info()[1]
+
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
