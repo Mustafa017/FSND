@@ -22,3 +22,13 @@ class Course(db.Model):
     def __repr__(self) -> str:
         return f'id:{self.crs_id}, code:{self.crs_code}, \
             title:{self.crs_title}'
+
+    @property
+    def format(self):
+        return{
+            "course_id": self.crs_id,
+            "course_code": self.crs_code,
+            "course_title": self.crs_title,
+            "course_desc": self.crs_desc,
+            "course_book": self.crs_book
+        }

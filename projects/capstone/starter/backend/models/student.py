@@ -30,7 +30,7 @@ class Student(db.Model):
             "student_last_name": self.std_lname,
             "student_email": self.std_email,
             "student_dob": self.std_dob,
-            "student_sex": self.std_gender,
+            "student_sex": self.std_gender
         }
 
     def __repr__(self) -> str:
