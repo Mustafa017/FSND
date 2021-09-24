@@ -1,17 +1,19 @@
+from re import T
 import os
 import sys
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 from flask_migrate import current
-from .config import Config
-from .models import setup_db, Student, Course, Classroom, Enrollments,\
+import config
+from auth.auth import require_auth
+from models import setup_db, Student, Course, Classroom, Enrollments,\
     Lecturer
 
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config.Config)
     db = setup_db(app)
     CORS(app)
 
@@ -54,6 +56,20 @@ def create_app(test_config=None):
                     "student": format_student,
                 })
         except Exception:
+            raise sys.exc_info()[1]
+
+    @app.route('/courses')
+    def getCourses():
+        try:
+            courses = db.session.query(Course).order_by(Course.crs_id).all()
+            format_courses = [course.format for course in courses]
+            return jsonify({
+                "success": True,
+                "courses": format_courses,
+                "total": len(format_courses)
+            })
+        except Exception as e:
+            # print(sys.exc_info())
             raise sys.exc_info()[1]
 
     @app.errorhandler(404)
