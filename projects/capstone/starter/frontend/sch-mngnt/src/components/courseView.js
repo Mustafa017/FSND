@@ -12,6 +12,7 @@ class CourseView extends React.Component {
           <div className="card-body">
             <h5 className="card-title">{this.props.course_title}</h5>
             <p className="card-text">{this.props.course_desc}</p>
+            <i className=""></i>
           </div>
         </div>
       </div>

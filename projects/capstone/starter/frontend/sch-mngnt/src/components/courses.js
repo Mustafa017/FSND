@@ -1,6 +1,7 @@
 import React from "react";
 import { withAuth0 } from "@auth0/auth0-react";
 import CourseView from "./courseView";
+import { Link } from "react-router-dom";
 
 class Course extends React.Component {
   constructor(props) {
@@ -56,6 +57,9 @@ class Course extends React.Component {
     return (
       <div>
         <div className="container">
+          <Link to="/addCourse">
+            <button className="btn-primary">Add Course</button>
+          </Link>
           <div className="row row-cols-1 row-cols-md-3 g-4">
             {this.state.courses.map((course) => (
               <CourseView key={course.course_id} {...course} />

@@ -4,6 +4,7 @@ import Course from "./components/courses";
 import Header from "./common/header";
 import About from "./components/about";
 import Home from "./components/home";
+import CourseFormView from "./forms/courseForm";
 import React from "react";
 import PageNotFound from "./components/PageNotFound";
 
@@ -15,6 +16,7 @@ function App() {
         <Route path="/" component={Home} exact />
         <Route path="/about" component={About} />
         <Route path="/courses" component={Course} />
+        <Route path="/addCourse" component={CourseFormView} />
         <Route component={PageNotFound} />
       </Switch>
     </BrowserRouter>
