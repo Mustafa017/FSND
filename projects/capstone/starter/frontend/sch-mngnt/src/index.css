@@ -11,3 +11,14 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.center-div {
+  margin: 0 auto;
+  width: 30%;
+  border: solid 1px black;
+}
+
+#submitButton {
+  margin-left: auto;
+  margin-right: auto;
+}
