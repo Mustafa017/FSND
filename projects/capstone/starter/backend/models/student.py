@@ -21,6 +21,17 @@ class Student(db.Model):
         self.std_dob = dob
         self.std_gender = gender
 
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def update(self):
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
     @property
     def format(self):
         return {
@@ -34,5 +45,4 @@ class Student(db.Model):
         }
 
     def __repr__(self) -> str:
-        return f'id:{self.std_id}, Reg_no:{self.std_regno}, \
-            first name:{self.std_fname}, Last_name:{self.std_lname}'
+        return f'<student: {self.std_id} {self.std_lname}>'
