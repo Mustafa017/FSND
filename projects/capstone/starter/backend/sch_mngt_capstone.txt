@@ -1,0 +1,54 @@
+from models import *
+from run_terminal import run_terminal
+from sqlalchemy import inspect
+db = run_terminal()
+
+crs = Course('CIS607','Survey of Predictive Analytical Techniques', 'This course addresses the foundations of using predictive statistics on big data sets to guide the decision-making process. The focus will be on applied examples using realistic data associated with marketing research and operations. Models implemented include multiple and logistic regression, principle component analysis, factor analysis, propensity score matching, classification, decision trees, and clustering with analytical estimations using spreadsheet software or SPSS.','Cluster Analysis and Data Mining')
+
+crs2 = Course('MIS603 ','InformationSsecurity and Risk Management', 'This course will stress the necessity for establishing an organization-wide information security risk management program designed to isolate significant internal and external cyber and physical access threats though the application of technical security evaluations. In addition, this course will explore the risks associated with using wired and wireless networks, cloud services, remote access to corporate information, as well as an examination of current and future administrative, physical, and technical cyber security safeguards and risk management systems. Contingency, business continuity and disaster recovery planning will be covered along with applicable ethics laws and regulations dealing with security and privacy.','Principles of Information Security', )
+
+crs3 = Course('MBA576','Operations Management', 'This course focuses on the vital concepts, issues, and techniques for efficient and effective operations to produce goods and services for consumers and/or businesses.  Special emphasis is placed on process improvement, logistics and supply chain management; planning; organizing and managing of resources to accomplish organizational objectives within a variety of business structures. Topics include operations strategy; product and service design; project management; operational planning; return on investment analysis; process design and analysis; capacity planning; lean production systems; purchasing; materials and inventory management, forecasting; quality management and six sigma; and operational analysis and benchmarking.','Operations Management')
+
+crs4 = Course('MIS609','Database Management Systems', 'This course explores the techniques used to design databases and database management systems. Principles for determining proper database management systems used within the corporate environments. Principles for determining database requirements, components and architectures are addressed. Topics include data dictionaries, use of case tools in developing databases, data integrity, security and privacy issues, and the use of SQL programming language. A final project involving the design of an actual corporate database as well as designing corporate reports are required.','Database systems: design, implementation, and management')
+
+lec = Lecturer('Dr', 'Charles', 'Gardner', 'charles@gmail.com', '05/20/1965', 'male')
+lec2 = Lecturer('Prof', 'Oscar', 'Bundi', 'obundi@gmail.com', '08/02/1980', 'male')
+lec3 = Lecturer('Dr', 'Mary', 'Rhodes', 'maryrho@outlook.com', '11/16/1974', 'female')
+
+std = Student(5362, 'Mustafa', 'Khamisi', 'mustafangure@gmail.com', '07/25/1991', 'male')
+std2 = Student(7348, 'Abubakar', 'Muchai', 'abubakarhamis@gmail.com', '12/20/1988', 'male')
+std3 = Student(8029, 'Yassir', 'Athman', 'ssrmuchai@gmail.com', '03/12/1999', 'male')
+std4 = Student(3278, 'Hawaa', 'Rashid', 'haerash@gmail.com', '08/22/2000', 'female')
+std5 = Student(6783, 'Betty', 'Karanja', 'karanjabet@gmail.com', '09/05/1994', 'female')
+
+cls1 = Classroom('RM302', 16)
+cls2 = Classroom('RM623', 13)
+cls3 = Classroom('RM167', 20)
+
+sem1 = Enrollments('Fall I')
+sem2 = Enrollments('Fall II')
+sem3 = Enrollments('Spring I')
+sem4 = Enrollments('Spring II')
+sem5 = Enrollments('Summer I')
+sem6 = Enrollments('Summer II')
+
+cls3.courses = [crs2, crs4]
+cls2.courses = [crs]
+cls1.courses = [crs3]
+
+lec.courses = [crs2, crs4]
+lec2.courses = [crs]
+lec3.courses = [crs3]
+
+std.enrollments = [sem1, sem2, sem4]
+std2.enrollments = [sem3]
+std3.enrollments = [sem2, sem3]
+std4.enrollments = [sem1, sem2]
+std5.enrollments = [sem1, sem4]
+
+crs.enrollments = [sem1, sem3]
+crs2.enrollments = [sem4]
+crs3.enrollments = [sem2, sem3]
+crs4.enrollments = [sem1, sem4]
+
+db.session.add_all([crs,crs2,crs3,crs4,std,std2,std3,std4,std5])
