@@ -1,8 +1,10 @@
+from os import error
 from urllib.request import urlopen
 from flask import request
 from functools import wraps
 from jose import jwt
 import json
+import sys
 
 AUTH0_DOMAIN = 'iamfsnd.us.auth0.com'
 ALGORITHM = ['RS256']
@@ -16,31 +18,28 @@ class AuthError(Exception):
 
 
 def get_auth_header():
-    try:
-        auth_header = request.headers.get('Authorization', None)
+    auth_header = request.headers.get('Authorization', None)
 
-        if not auth_header:
-            raise AuthError({
-                "error": "Authorization not in header",
-                "description": "Header must contain Authorization parameter"
-            }, 401)
+    if not auth_header:
+        raise AuthError({
+            "error": "Authorization not in header",
+            "description": "Header must contain Authorization parameter"
+        }, 401)
 
-        header_parts = auth_header.split(' ')
-        if header_parts[0].lower() != 'bearer':
-            raise AuthError({
-                'error': 'No Bearer part',
-                'description': 'Authorization first part should be Bearer'
-            }, 401)
-        elif len(header_parts) < 2:
-            raise AuthError({
-                'error': 'authorization header length less than 2',
-                'description': 'Authorization should contain Bearer and Token parts'
-            }, 401)
-        else:
-            token = header_parts[1]
-            return token
-    except Exception as e:
-        print(e)
+    header_parts = auth_header.split(' ')
+    if header_parts[0].lower() != 'bearer':
+        raise AuthError({
+            'error': 'No Bearer part',
+            'description': 'Authorization first part should be Bearer'
+        }, 401)
+    elif len(header_parts) < 2:
+        raise AuthError({
+            'error': 'authorization header length less than 2',
+            'description': 'Authorization should contain Bearer and Token parts'
+        }, 401)
+    else:
+        token = header_parts[1]
+        return token
 
 
 def verify_jwt(token):
@@ -69,7 +68,6 @@ def verify_jwt(token):
             payload = jwt.decode(token, rsa_key, algorithms=ALGORITHM,
                                  audience=API_AUDIENCE,
                                  issuer=f'https://{AUTH0_DOMAIN}/')
-            return payload
         except jwt.ExpiredSignatureError:
             raise AuthError({
                 'code': 'token_expired',
@@ -88,6 +86,7 @@ def verify_jwt(token):
                 'description': 'Unable to parse authentication token.'
             }, 401)
 
+        return payload
     raise AuthError({
         'error': 'error decoding token header',
         'description': 'Unable to find appropriate kid in token header'
