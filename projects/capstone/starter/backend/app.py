@@ -5,7 +5,7 @@ from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 from flask_migrate import current
 import config
-from auth.auth import authorize_user
+from auth.auth import AuthError, authorize_user
 from models import setup_db, Student, Course, Classroom, Enrollments,\
     Lecturer
 
@@ -75,6 +75,7 @@ def create_app(test_config=None):
             })
 
     @app.route('/students/create', methods=['POST'])
+    @authorize_user('post:data')
     def create_student():
         body = request.get_json()
         std_fname = body.get('fname')
@@ -112,6 +113,7 @@ def create_app(test_config=None):
             })
 
     @app.route('/students/<int:student_id>', methods=['PATCH'])
+    @authorize_user('patch:data')
     def update_students(student_id):
         body = request.get_json()
 
@@ -146,6 +148,7 @@ def create_app(test_config=None):
             })
 
     @app.route('/students/<int:student_id>', methods=['DELETE'])
+    @authorize_user('delete:data')
     def delete_students(student_id):
         error = False
 
@@ -163,12 +166,12 @@ def create_app(test_config=None):
             db.session.close()
 
         if error:
-            abort(422)
+            abort(404)
         else:
             return jsonify({
                 'success': True,
                 'deleted': std.std_id,
-                'courses': formatted_students,
+                'students': formatted_students,
                 'total_courses': len(updated_students)
             })
 
@@ -201,6 +204,7 @@ def create_app(test_config=None):
             })
 
     @app.route('/courses/create', methods=['POST'])
+    @authorize_user('post:data')
     def create_courses():
         body = request.get_json()
         crs_title = body.get('title')
@@ -238,6 +242,7 @@ def create_app(test_config=None):
             })
 
     @app.route('/courses/<int:course_id>', methods=['PATCH'])
+    @authorize_user('patch:data')
     def update_courses(course_id):
         body = request.get_json()
 
@@ -268,6 +273,7 @@ def create_app(test_config=None):
             })
 
     @app.route('/courses/<int:course_id>', methods=['DELETE'])
+    @authorize_user('delete:data')
     def delete_courses(course_id):
         error = False
 
@@ -292,6 +298,14 @@ def create_app(test_config=None):
                 'courses': formatted_courses,
                 'total_courses': len(updated_courses)
             })
+
+    @app.errorhandler(AuthError)
+    def authError(error):
+        return jsonify({
+            'success': False,
+            'error': error.status_code,
+            'message': error.error['description']
+        }), error.status_code
 
     @app.errorhandler(400)
     def bad_request(error):
