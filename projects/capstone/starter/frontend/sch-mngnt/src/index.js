@@ -4,7 +4,7 @@ import "./index.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import App from "./App";
 import { Auth0Provider } from "@auth0/auth0-react";
-import { domain, clientId } from "./authConfig";
+import { domain, clientId, audience } from "./authConfig";
 import reportWebVitals from "./reportWebVitals";
 
 ReactDOM.render(
@@ -13,6 +13,7 @@ ReactDOM.render(
       domain={domain}
       clientId={clientId}
       redirectUri={window.location.origin}
+      audience={audience}
     >
       <App />
     </Auth0Provider>
