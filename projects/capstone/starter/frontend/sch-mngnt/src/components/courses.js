@@ -17,9 +17,7 @@ class Course extends React.Component {
     return new Promise(async (resolve, reject) => {
       try {
         const { getAccessTokenSilently } = this.props.auth0;
-        const response = await getAccessTokenSilently({
-          audience: "courses",
-        });
+        const response = await getAccessTokenSilently();
         const token = await response;
         let data = await fetch(url, {
           headers: {
