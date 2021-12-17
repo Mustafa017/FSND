@@ -18,25 +18,23 @@ function Course_Form() {
       [event.target.name]: value,
     });
   };
-  const { getAccessTokenSilently } = useAuth0();
-  const token = getAccessTokenSilently({
-    audience: "courses",
-  });
 
-  const headers = {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
+  const { getAccessTokenSilently } = useAuth0();
 
   const postData = (url = "", data = {}) => {
     return new Promise(async (resolve, reject) => {
+      const token = await getAccessTokenSilently();
+      console.log(data);
       try {
         const request = await fetch(url, {
           method: "POST",
-          headers: headers,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(data),
         });
-        let result = request.json();
+        let result = await request.json();
         resolve(result);
       } catch (error) {
         reject(error);
@@ -44,9 +42,9 @@ function Course_Form() {
     });
   };
 
-  const newCourse = async () => {
+  const newCourse = () => {
     const formdata = { ...state };
-    postData("/new_course", formdata)
+    postData("/courses/create", formdata)
       .then((response) => {
         document.querySelector("#addCourse").reset();
         console.log(response);

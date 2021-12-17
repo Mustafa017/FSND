@@ -1,20 +1,28 @@
 from logging import error
 import os
 import sys
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, abort, jsonify, redirect
+from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_migrate import current
-import config
+from config import DevelopmentConfig, TestingConfig
 from auth.auth import AuthError, authorize_user
 from models import setup_db, Student, Course, Classroom, Enrollments,\
     Lecturer
+
+migrate = Migrate()
 
 
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
-    app.config.from_object(config.Config)
+    if test_config:
+        app.config.from_object(TestingConfig())
+    else:
+        app.config.from_object(DevelopmentConfig())
+
     db = setup_db(app)
+    migrate.init_app(app, db)
     CORS(app)
 
     @app.route('/')
@@ -48,8 +56,8 @@ def create_app(test_config=None):
         else:
             return jsonify({
                 "success": True,
-                "data": formatted_std,
-                "total_students": len(formatted_std)
+                "students": formatted_std,
+                "total": len(formatted_std)
             })
 
     @app.route('/students/<int:student_id>')
@@ -105,12 +113,7 @@ def create_app(test_config=None):
         if error:
             abort(422)
         else:
-            return jsonify({
-                'success': True,
-                'created': std.std_id,
-                'students': students_list,
-                'total': len(students)
-            })
+            return redirect('/students')
 
     @app.route('/students/<int:student_id>', methods=['PATCH'])
     @authorize_user('patch:data')
@@ -118,9 +121,6 @@ def create_app(test_config=None):
         body = request.get_json()
 
         if body:
-            fname = body.get('fname')
-            lname = body.get('lname')
-            regno = body.get('regno')
             email = body.get('email')
         else:
             abort(400)
@@ -129,9 +129,6 @@ def create_app(test_config=None):
 
         try:
             std = db.session.get(Student, student_id)
-            std.std_fname = fname
-            std.std_lname = lname
-            std.std_regno = regno
             std.std_email = email
             std.update()
         except Exception as e:
@@ -142,10 +139,7 @@ def create_app(test_config=None):
         if error:
             abort(422)
         else:
-            return jsonify({
-                'success': True,
-                'student_id': std.std_id
-            })
+            return redirect(f'/students/{student_id}')
 
     @app.route('/students/<int:student_id>', methods=['DELETE'])
     @authorize_user('delete:data')
@@ -168,12 +162,7 @@ def create_app(test_config=None):
         if error:
             abort(404)
         else:
-            return jsonify({
-                'success': True,
-                'deleted': std.std_id,
-                'students': formatted_students,
-                'total_courses': len(updated_students)
-            })
+            return redirect('/students')
 
     #---------------------------------------------------------#
     # Courses
@@ -234,12 +223,7 @@ def create_app(test_config=None):
         if error:
             abort(422)
         else:
-            return jsonify({
-                'success': True,
-                'created': crs.crs_id,
-                'courses': courses_list,
-                'total': len(courses)
-            })
+            return redirect('/courses')
 
     @app.route('/courses/<int:course_id>', methods=['PATCH'])
     @authorize_user('patch:data')
@@ -294,7 +278,7 @@ def create_app(test_config=None):
         else:
             return jsonify({
                 'success': True,
-                'deleted id': crs.crs_id,
+                'deleted_id': crs.crs_id,
                 'courses': formatted_courses,
                 'total_courses': len(updated_courses)
             })
@@ -310,7 +294,7 @@ def create_app(test_config=None):
     @app.errorhandler(400)
     def bad_request(error):
         return jsonify({
-            "Success": False,
+            "success": False,
             "error": 400,
             "message": "Bad Request"
         }), 400
@@ -318,7 +302,7 @@ def create_app(test_config=None):
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({
-            "Success": False,
+            "success": False,
             "error": 404,
             "message": "Resource Not Found"
         }), 404
@@ -326,7 +310,7 @@ def create_app(test_config=None):
     @app.errorhandler(500)
     def server_error(error):
         return jsonify({
-            "Success": False,
+            "success": False,
             "error": 500,
             "message": "Internal Server error"
         }), 500
@@ -334,7 +318,7 @@ def create_app(test_config=None):
     @app.errorhandler(422)
     def unprocessable(error):
         return jsonify({
-            "Success": False,
+            "success": False,
             "error": 422,
             "message": "unprocessable"
         }), 422
