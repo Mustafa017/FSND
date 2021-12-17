@@ -113,12 +113,7 @@ def create_app(test_config=None):
         if error:
             abort(422)
         else:
-            return jsonify({
-                'success': True,
-                'created': std.std_id,
-                'students': students_list,
-                'total': len(students)
-            })
+            return redirect('/students')
 
     @app.route('/students/<int:student_id>', methods=['PATCH'])
     @authorize_user('patch:data')
@@ -144,7 +139,7 @@ def create_app(test_config=None):
         if error:
             abort(422)
         else:
-            return redirect('/students/<int:student_id>')
+            return redirect(f'/students/{student_id}')
 
     @app.route('/students/<int:student_id>', methods=['DELETE'])
     @authorize_user('delete:data')
@@ -167,12 +162,7 @@ def create_app(test_config=None):
         if error:
             abort(404)
         else:
-            return jsonify({
-                'success': True,
-                'deleted': std.std_id,
-                'students': formatted_students,
-                'total_courses': len(updated_students)
-            })
+            return redirect('/students')
 
     #---------------------------------------------------------#
     # Courses
@@ -233,12 +223,7 @@ def create_app(test_config=None):
         if error:
             abort(422)
         else:
-            return jsonify({
-                'success': True,
-                'created': crs.crs_id,
-                'courses': courses_list,
-                'total': len(courses)
-            })
+            return redirect('/courses')
 
     @app.route('/courses/<int:course_id>', methods=['PATCH'])
     @authorize_user('patch:data')
