@@ -10,7 +10,9 @@ DEBUG = True
 
 # Connect to the database
 
+DB_PSWD = os.getenv('DB_PSWD')
 
 # DONE IMPLEMENT DATABASE URL
-SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:Galacticos$1@localhost:5432/fyyur'
+SQLALCHEMY_DATABASE_URI = "postgresql://postgres:{}@localhost:5432/fyyur".format(
+    DB_PSWD)
 SQLALCHEMY_TRACK_MODIFICATIONS = False
